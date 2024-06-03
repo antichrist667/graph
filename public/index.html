@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejemplo de GraphQL</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center">Ejemplo de GraphQL</h1>
+    <div class="mt-4">
+      <h2>Consultas</h2>
+      <div class="input-group mb-3">
+        <input type="number" id="userId" placeholder="Ingresa el ID de usuario" class="form-control">
+        <div class="input-group-append">
+          <button class="btn btn-primary" id="fetchUser">Buscar Usuario</button>
+        </div>
+      </div>
+      <div id="queryResult" class="mt-3"></div>
+    </div>
+    <div class="mt-4">
+      <h2>Mutaciones</h2>
+      <input type="text" id="username" placeholder="Ingresa el nombre" class="form-control mb-2">
+      <button class="btn btn-success mb-2" id="createUser">Crear Usuario</button>
+      <button class="btn btn-danger mb-2" id="deleteUser">Eliminar Usuario</button>
+      <button class="btn btn-warning mb-2" id="updateUser">Actualizar Usuario</button>
+      <div id="mutationResult" class="mt-3"></div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('fetchUser').onclick = async () => {
+      const userId = document.getElementById('userId').value;
+      if (!userId) {
+        alert('Por favor, ingresa un ID de usuario');
+        return;
+      }
+      const query = `{ user(id: ${userId}) { id name } }`;
+      console.log('Enviando consulta:', query);
+      const result = await fetchGraphQL(query);
+      console.log('Resultado recibido:', result);
+      const user = result?.user;
+      if (user) {
+        document.getElementById('queryResult').innerText = `ID: ${user.id}, Nombre: ${user.name}`;
+        document.getElementById('username').value = user.name;
+      } else {
+        document.getElementById('queryResult').innerText = 'Usuario no encontrado';
+      }
+    };
+
+    document.getElementById('createUser').onclick = async () => {
+      const name = document.getElementById('username').value;
+      if (!name) {
+        alert('Por favor, ingresa un nombre');
+        return;
+      }
+      const query = `mutation { createUser(name: "${name}") { id name } }`;
+      console.log('Enviando mutación:', query);
+      const result = await fetchGraphQL(query);
+      console.log('Resultado recibido:', result);
+      document.getElementById('mutationResult').innerText = JSON.stringify(result);
+    };
+
+    document.getElementById('deleteUser').onclick = async () => {
+      const userId = document.getElementById('userId').value;
+      if (!userId) {
+        alert('Por favor, ingresa un ID de usuario');
+        return;
+      }
+      const query = `mutation { deleteUser(id: ${userId}) { id name } }`;
+      console.log('Enviando mutación:', query);
+      const result = await fetchGraphQL(query);
+      console.log('Resultado recibido:', result);
+      document.getElementById('mutationResult').innerText = JSON.stringify(result);
+    };
+
+    document.getElementById('updateUser').onclick = async () => {
+      const userId = document.getElementById('userId').value;
+      const name = document.getElementById('username').value;
+      if (!userId || !name) {
+        alert('Por favor, ingresa tanto el ID de usuario como el nombre');
+        return;
+      }
+      const query = `mutation { updateUser(id: ${userId}, name: "${name}") { id name } }`;
+      console.log('Enviando mutación:', query);
+      const result = await fetchGraphQL(query);
+      console.log('Resultado recibido:', result);
+      document.getElementById('mutationResult').innerText = JSON.stringify(result);
+    };
+
+    async function fetchGraphQL(query) {
+      try {
+        const response = await fetch('/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const result = await response.json();
+        console.log('Respuesta de GraphQL:', result);
+        if (result.errors) {
+          console.error('Errores de GraphQL:', result.errors);
+        }
+        return result.data;
+      } catch (error) {
+        console.error('Error al hacer la solicitud:', error);
+        alert('Ocurrió un error al obtener los datos. Revisa la consola para más detalles.');
+      }
+    }
+  </script>
+</body>
+</html>
